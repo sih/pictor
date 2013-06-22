@@ -16,7 +16,7 @@ public interface PurchaseApi {
     
     public void delete(Purchase p);
     
-    public Purchase get(String purchaseId);
+    public Purchase get(String handle, String purchaseId);
     
     
 }

@@ -9,6 +9,8 @@ import at.ispend.lab.cassandra.model.Purchase;
 
 public class PurchaseDataServiceTest extends TestCase {
     
+    private static final String PURCHASE_ID_1 = "abc123";
+    private static final String PURCHASE_ID_2 = "def456";
 
     private PurchaseDataService pds;
 
@@ -18,12 +20,15 @@ public class PurchaseDataServiceTest extends TestCase {
     @Override protected void setUp() throws Exception {
         super.setUp();
         pds = new PurchaseDataService();
+        pds.init();
     }
+    
+    
 
     @Test public void testInsertNonNullPurchase() {
         
         Purchase p = new Purchase();
-        p.setPurchaseId("v"+String.valueOf(System.currentTimeMillis()));
+        p.setPurchaseId(PURCHASE_ID_1);
         p.setHandle("sid");
         p.setVendor("Waterstones Teddington");
         p.setProduct("The Killing Joke");
@@ -38,4 +43,35 @@ public class PurchaseDataServiceTest extends TestCase {
         
     }
 
+    
+    @Test public void testGetPurchaseExists() {
+        
+        try {
+            Purchase v = pds.get("sid", "2013-06-22", PURCHASE_ID_1);
+            assertNotNull(v);
+            
+            Purchase p = new Purchase();
+            p.setPurchaseId(PURCHASE_ID_1);
+            p.setHandle("sid");
+            p.setVendor("Waterstones Teddington");
+            p.setProduct("The Killing Joke");
+            p.setPrice(1350);
+            
+            assertEquals(v, p);
+            assertEquals(p.getPurchaseId(),v.getPurchaseId());
+            assertEquals(p.getPrice(),v.getPrice());
+            assertEquals(p.getProduct(),v.getProduct());
+            assertEquals(p.getVendor(),v.getVendor());
+            assertEquals(p.getHandle(),v.getHandle());
+            assertEquals(p.getPrice(),v.getPrice());
+            
+            
+            
+        }
+        catch(Exception e) {
+            fail("Failed with an exception "+e.getMessage());
+        }
+        
+    }
+    
 }

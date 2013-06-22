@@ -1,5 +1,6 @@
 package at.ispend.lab.cassandra.model;
 
+import com.google.gson.*;
 
 /**
  * @author sid
@@ -179,10 +180,15 @@ public class Purchase {
             return false;
         return true;
     }
+    
+    
+    /**
+     * @return A JSON representation of this purchase
+     */
+    public String toJSON() {
+        Gson g = new Gson();
+        return g.toJson(this);
+    }
 
-    
-
-    
-    
     
 }

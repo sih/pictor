@@ -27,7 +27,7 @@ public class PurchaseApiImpl implements PurchaseApi {
         
     }
 
-    @Override public Purchase get(String purchaseId) {
+    @Override public Purchase get(String handle, String purchaseId) {
         // TODO Auto-generated method stub
         return null;
     }
