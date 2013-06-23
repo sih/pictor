@@ -42,6 +42,24 @@ public class PurchaseDataServiceTest extends TestCase {
         }
         
     }
+    
+    @Test public void testInsertCompositeNonNullPurchase() {
+        
+        Purchase p = new Purchase();
+        p.setPurchaseId(PURCHASE_ID_1);
+        p.setHandle("sid");
+        p.setVendor("Waterstones Teddington");
+        p.setProduct("The Killing Joke");
+        p.setPrice(1350);
+        
+        try {
+            pds.insertComposite(p);
+        }
+        catch(Exception e) {
+            fail("Failed with an exception "+e.getMessage());
+        }
+        
+    }    
 
     
     @Test public void testGetPurchaseExists() {

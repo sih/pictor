@@ -13,3 +13,9 @@ and column_metadata =[
 {column_name: latitude, validation_class: UTF8Type}
 {column_name: secret, validation_class: BooleanType}
 ];
+
+create column family CompositePurchases
+with comparator = 'CompositeType(UTF8Type,UTF8Type,UTF8Type)'
+and key_validation_class = 'UTF8Type'
+and default_validation_class = 'UTF8Type'
+;

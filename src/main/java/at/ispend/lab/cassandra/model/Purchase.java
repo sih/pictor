@@ -1,6 +1,15 @@
 package at.ispend.lab.cassandra.model;
 
-import com.google.gson.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import me.prettyprint.cassandra.serializers.CompositeSerializer;
+import me.prettyprint.cassandra.serializers.StringSerializer;
+import me.prettyprint.hector.api.beans.Composite;
+import me.prettyprint.hector.api.beans.HColumn;
+import me.prettyprint.hector.api.factory.HFactory;
+
+import com.google.gson.Gson;
 
 /**
  * @author sid
@@ -17,6 +26,16 @@ public class Purchase {
     private String longitude;
     private String latitude;
     private boolean secret;
+    
+    static SimpleDateFormat iso8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+    
+    
+    /**
+     * Default the purchase date to now 
+     */
+    public Purchase() {
+       this.purchaseDate = iso8601.format(new Date()); 
+    }
     
     /**
      * @return the handle
@@ -189,6 +208,25 @@ public class Purchase {
         Gson g = new Gson();
         return g.toJson(this);
     }
+    
+
+    /**
+     * Creates an HColumn with a column name composite of the form:
+     *   ['vendor']:['product]:['purchase_id'])
+     * and a value of ['timezone']
+     * @return
+     */
+    public HColumn<Composite,String> getColumn() {
+
+      Composite composite = new Composite();
+      composite.addComponent(getVendor(), StringSerializer.get());
+      composite.addComponent(getProduct(), StringSerializer.get());
+      composite.addComponent(getPurchaseId(), StringSerializer.get());
+      
+      HColumn<Composite,String> col =
+        HFactory.createColumn(composite, String.valueOf(getPrice()) , new CompositeSerializer(), StringSerializer.get());
+      return col;
+    }    
 
     
 }

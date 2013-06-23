@@ -3,6 +3,7 @@ package at.ispend.lab.cassandra.datasvc;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
 import me.prettyprint.hector.api.beans.HColumn;
@@ -16,6 +17,7 @@ import at.ispend.lab.cassandra.model.Purchase;
 public class PurchaseDataService extends AbstractDataService {
 
     final String PURCHASES = "Purchases";
+    final String COMPOSITE_PURCHASES = "CompositePurchases";
 
 
     /**
@@ -89,5 +91,21 @@ public class PurchaseDataService extends AbstractDataService {
         return p;
     }
     
+    
+    /**
+     * @param p
+     */
+    void insertComposite(Purchase p) {
+        Cluster cluster = HFactory.getOrCreateCluster("PictorCluster",
+                "localhost:9160");
+        Keyspace keyspace = HFactory.createKeyspace(KEYSPACE_PICTOR, cluster);
+        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
+        
+        String key = p.getHandle() + ":" + now();
+        
+        // assemble the insertions
+        mutator.addInsertion(key, COMPOSITE_PURCHASES, p.getColumn());
+        mutator.execute();
+    }
 
 }
