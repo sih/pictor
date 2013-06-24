@@ -3,9 +3,11 @@ package at.ispend.lab.cassandra.datasvc;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.prettyprint.cassandra.serializers.CompositeSerializer;
 import me.prettyprint.cassandra.serializers.StringSerializer;
 import me.prettyprint.hector.api.Cluster;
 import me.prettyprint.hector.api.Keyspace;
+import me.prettyprint.hector.api.beans.Composite;
 import me.prettyprint.hector.api.beans.HColumn;
 import me.prettyprint.hector.api.beans.HSuperColumn;
 import me.prettyprint.hector.api.factory.HFactory;
@@ -18,6 +20,7 @@ public class PurchaseDataService extends AbstractDataService {
 
     final String PURCHASES = "Purchases";
     final String COMPOSITE_PURCHASES = "CompositePurchases";
+    final String COMPOSITE_TOTALS = "CompositeTotals";
 
 
     /**
@@ -96,16 +99,46 @@ public class PurchaseDataService extends AbstractDataService {
      * @param p
      */
     void insertComposite(Purchase p) {
+        // initialise
         Cluster cluster = HFactory.getOrCreateCluster("PictorCluster",
                 "localhost:9160");
         Keyspace keyspace = HFactory.createKeyspace(KEYSPACE_PICTOR, cluster);
-        Mutator<String> mutator = HFactory.createMutator(keyspace, StringSerializer.get());
         
-        String key = p.getHandle() + ":" + now();
+        // add the purchase to the daily store
+        Mutator<Composite> cMutator = HFactory.createMutator(keyspace, CompositeSerializer.get());
         
-        // assemble the insertions
-        mutator.addInsertion(key, COMPOSITE_PURCHASES, p.getColumn());
-        mutator.execute();
+        // row is composite of handle, yyyy-mm-dd
+        Composite rowKey = new Composite();
+        rowKey.add(0, p.getHandle());
+        rowKey.add(1, now());        
+        
+        // column is composite of vendor, product, purchase_id (with price as value)
+        cMutator.addInsertion(rowKey, COMPOSITE_PURCHASES, p.getColumn());
+        cMutator.execute();
+        
+        // now increment the daily totals
+        Mutator<String> sMutator = HFactory.createMutator(keyspace, StringSerializer.get());
+        
+        String yyyymmdd = p.getPurchaseDate().substring(0, 10);
+        
+        Composite grandTotal = new Composite();
+        grandTotal.addComponent(yyyymmdd, StringSerializer.get());
+        grandTotal.addComponent("grand_total", StringSerializer.get());
+        
+        Composite dailyTotal = new Composite();
+        dailyTotal.addComponent(yyyymmdd, StringSerializer.get());
+        dailyTotal.addComponent("daily_total", StringSerializer.get());
+        
+        Composite dailyCount = new Composite();
+        dailyCount.addComponent(yyyymmdd, StringSerializer.get());
+        dailyCount.addComponent("daily_count", StringSerializer.get());
+        
+        sMutator.incrementCounter(p.getHandle(), COMPOSITE_TOTALS, grandTotal, p.getPrice());
+        sMutator.incrementCounter(p.getHandle(), COMPOSITE_TOTALS, dailyTotal, p.getPrice());
+        sMutator.incrementCounter(p.getHandle(), COMPOSITE_TOTALS, dailyCount, 1);
+        
+        sMutator.execute();
+        
     }
 
 }
